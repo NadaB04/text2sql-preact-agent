@@ -14,6 +14,7 @@ import argparse
 import json
 import subprocess
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
@@ -131,10 +132,15 @@ def main(argv=None) -> int:
                 "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     (logs / "run_config.json").write_text(json.dumps(run_info, indent=2), encoding="utf-8")
 
+    write_lock = threading.Lock()
+
     def one(q: dict) -> dict:
         result, log = answer_question(cfg, q, a.db_dir)
         (logs / f"q{q['question_id']}.json").write_text(json.dumps(log, ensure_ascii=False, default=str, indent=1),
                                                          encoding="utf-8")
+        with write_lock:  # one line as soon as the question is done, so a stopped run keeps its results
+            f.write(json.dumps(result, ensure_ascii=False) + "\n")
+            f.flush()
         print(f"q{q['question_id']}: {result['status']} steps={result['steps']} {result['wall_time_s']:.0f}s", flush=True)
         return result
 
@@ -142,14 +148,11 @@ def main(argv=None) -> int:
     if sampler:
         sampler.start()
     try:  # questions run in parallel threads; each has its own Session, database connection and Toolbox
-        with ThreadPoolExecutor(max_workers=max(1, a.concurrency)) as pool:
+        with out.open("w", encoding="utf-8") as f, ThreadPoolExecutor(max_workers=max(1, a.concurrency)) as pool:
             results = list(pool.map(one, questions))
     finally:
         if sampler:
             sampler.stop()
-    with out.open("w", encoding="utf-8") as f:
-        for r in results:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
     print(f"wrote {out} ({len(results)} questions)")
 
     if questions and all("gold_sql" in q for q in questions):  # skip scoring when gold_sql is missing
@@ -170,4 +173,5 @@ def score(questions: str, db_dir: str, results: Path, report: Path) -> str:
     scorer = Path(__file__).with_name("scoring.py")
     cmd = [sys.executable, str(scorer), "--questions", questions, "--db-dir", db_dir, "--results", str(results),
            "--report", str(report)]
-    return subprocess.run(cmd, capture_output=True, text=True).stdout
+    p = subprocess.run(cmd, capture_output=True, text=True)
+    return p.stdout + (f"\nscoring.py failed:\n{p.stderr}" if p.returncode else "")

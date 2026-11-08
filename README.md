@@ -19,7 +19,7 @@ The package is **`text2sql_v2`**.
 ## Setup and run
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt                   # Python 3.10+ (tested with 3.12)
 # Ollama, with a context window large enough for the schema + the agent's history:
 OLLAMA_CONTEXT_LENGTH=16384 ollama serve          # PowerShell: $env:OLLAMA_CONTEXT_LENGTH=16384; ollama serve
 ollama pull qwen3.5:4b-q8_0                       # main setup (Q8_0); qwen3.5:4b = Q4_K_M for the comparison
@@ -36,7 +36,8 @@ python -m text2sql_v2 \
 The kit (`sql_agent_kit/`, with the databases and the dev questions) is expected next to this folder.
 This is the command from `CONTRACT.md`, run from the project root. It writes `results.jsonl`, one log
 per question in `runs/results_logs/`, and, when the questions carry `gold_sql`, scores the run with the
-kit's `scoring.py` (an unmodified copy is `text2sql_v2/scoring.py`). Without `gold_sql` it answers every
+kit's `scoring.py` (an unmodified copy is `text2sql_v2/scoring.py`). Each line of `results.jsonl` is
+written as soon as its question finishes, so a stopped run keeps the questions it finished. Without `gold_sql` it answers every
 question and skips scoring. Switching to vLLM changes only `--base-url` and `--model`
 (e.g. `--base-url http://localhost:8000/v1 --model qwen3.5-4b`).
 
@@ -52,7 +53,7 @@ question and skips scoring. Switching to vLLM changes only `--base-url` and `--m
 | `--ids`, `--limit` | | run a subset |
 
 Tests need no model or GPU (a scripted fake model stands in for the server): `python -m pytest -q`
-(16 tests).
+(17 tests). They look for the kit next to this folder, or in `KIT_DIR`, and skip without it.
 
 ## How the agent works
 
@@ -113,7 +114,8 @@ accuracy from 109 to 90 of 176 (p = 0.002).
 **Guards** (all in `tools.py` / `agent.py`): a repeated identical query returns its earlier result with a
 note; an unknown table or column gets a table-qualified "did you mean" (`frpm.\`School Name\``); a reply
 with no tool call gets a nudge; a tool call the server cannot parse (Ollama answers HTTP 500) or a call
-that hits `--call-timeout` is reported to the model, which tries again.
+that hits `--call-timeout` is reported to the model, which tries again; if the server cannot be reached,
+the call is retried once after 3 s.
 
 **Limits and safety.**
 - **Read-only in code**, three ways (`db.py`): the file is opened with `mode=ro`, `PRAGMA query_only=ON`,
@@ -138,7 +140,7 @@ and every event in order with wall-clock start and duration:
 |---|---|
 | `llm` | step, the input messages, the reply's text and tool calls (with thought and prediction), prompt and completion tokens, seconds |
 | `tool` | name, arguments, output (first 2,000 characters), seconds |
-| `discarded_text`, `nudge`, `llm_error`, `server_rejected_key`, `answer_failed` | what happened and when |
+| `discarded_text`, `nudge`, `llm_error`, `server_rejected_key`, `connection_retry`, `answer_failed` | what happened and when |
 
 Per question the results line has `steps`, `tool_calls`, `prompt_tokens`, `completion_tokens`,
 `llm_time_s` (waiting for the model), `tool_time_s` (running tools), `wall_time_s` and `status`

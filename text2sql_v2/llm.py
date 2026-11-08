@@ -111,7 +111,8 @@ class Session:
 
     def _invoke(self, messages, tools, max_tokens) -> AIMessage:
         make = self.client or ChatOpenAI  # a new client per call, so its timeout fits the time left
-        for _ in range(3):
+        retried = False
+        for _ in range(4):
             llm = make(base_url=self.cfg.base_url, api_key=self.cfg.api_key, model=self.cfg.model,
                        temperature=self.cfg.temperature,
                        max_tokens=max_tokens or self.cfg.max_tokens,
@@ -121,6 +122,11 @@ class Session:
             try:
                 return runnable.invoke(messages)
             except Exception as exc:
+                if not retried and _no_connection(exc) and self.left() > 15:
+                    retried = True  # the server could not be reached: wait a moment and try once more
+                    self.note(type="connection_retry", error=short_error(exc))
+                    time.sleep(3)
+                    continue
                 key = _rejected_key(exc)
                 if key is None:
                     raise
@@ -176,6 +182,12 @@ class Session:
     def note(self, **event: Any) -> None:
         with self.lock:
             self.events.append({"start": time.time(), **event})
+
+
+def _no_connection(exc: Exception) -> bool:
+    """The server could not be reached (not a timeout: those are reported to the model instead)."""
+    names = [c.__name__ for c in type(exc).__mro__]
+    return "APIConnectionError" in names and "APITimeoutError" not in names
 
 
 def _rejected_key(exc: Exception) -> str | None:

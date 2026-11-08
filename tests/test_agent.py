@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import os
 import time
 from pathlib import Path
 
@@ -19,8 +20,11 @@ from text2sql_v2.llm import Config
 from text2sql_v2.runner import RESULT_FIELDS, answer_question
 from text2sql_v2.telemetry import Sampler, metrics_url, parse_prometheus
 
-KIT = Path(__file__).resolve().parents[2] / "sql_agent_kit" / "data"
+KIT = Path(os.environ.get("KIT_DIR") or Path(__file__).resolve().parents[2] / "sql_agent_kit") / "data"
 DB_DIR = str(KIT / "databases")
+if not (KIT / "databases" / "superhero" / "superhero.sqlite").is_file():
+    pytest.skip(f"the kit's databases are not at {KIT}; set KIT_DIR to the sql_agent_kit folder",
+                allow_module_level=True)
 Q = {"question_id": 1, "db_id": "superhero", "question": "How many superheroes are there?",
      "evidence": "", "difficulty": "simple", "gold_sql": "SELECT COUNT(*) FROM superhero"}
 GOOD = "SELECT COUNT(*) FROM superhero"
@@ -247,3 +251,18 @@ def test_telemetry_parses_vllm_metrics_and_samples(tmp_path):
     s.stop()
     rows = [json.loads(line) for line in (tmp_path / "t.jsonl").read_text().splitlines()]
     assert rows and {"t", "cpu_pct", "ram_used_gb"} <= set(rows[0]) and s.metrics is None
+
+
+def test_a_dropped_connection_is_retried_once():
+    import httpx
+    import openai
+    state = {"n": 0}
+
+    def respond(messages):
+        state["n"] += 1
+        if state["n"] == 1:
+            raise openai.APIConnectionError(request=httpx.Request("POST", "http://fake/v1/chat/completions"))
+        return ai(call("submit", thought="count rows", sql=GOOD))
+    result, log = run(respond)
+    assert result["status"] == "ok" and state["n"] == 2
+    assert [e["type"] for e in log["events"]][:2] == ["connection_retry", "llm"]
