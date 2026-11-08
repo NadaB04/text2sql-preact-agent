@@ -23,7 +23,7 @@ pip install -r requirements.txt                   # Python 3.10+ (tested with 3.
 # Ollama, with a context window large enough for the schema + the agent's history:
 OLLAMA_CONTEXT_LENGTH=16384 ollama serve          # PowerShell: $env:OLLAMA_CONTEXT_LENGTH=16384; ollama serve
 ollama pull qwen3.5:4b-q8_0                       # main setup (Q8_0); qwen3.5:4b = Q4_K_M for the comparison
-python scripts/hello_tool_call.py                 # optional check: one tool call, no framework
+ollama show qwen3.5:4b-q8_0                       # check: quantization Q8_0, capabilities include tools
 
 python -m text2sql_v2 \
   --questions ../sql_agent_kit/data/questions_dev.json \
@@ -146,8 +146,9 @@ Per question the results line has `steps`, `tool_calls`, `prompt_tokens`, `compl
 `llm_time_s` (waiting for the model), `tool_time_s` (running tools), `wall_time_s` and `status`
 (`ok`, `error`, `timeout`, `max_steps`), plus `answer`, `fallback_sql` and `error`. `run_config.json` records
 the settings, `score_report.json` the kit scorer's report, and `telemetry.jsonl` the hardware samples.
-`scripts/summarize.py` compares runs and checks from the logs that the mechanism happened (thoughts,
-predictions, dropped free text, repeat-guard hits), with exact McNemar tests between runs.
+Each run folder also has a `summary_*.json`: accuracy, cost, and checks counted from the logs that the
+mechanism happened (thoughts, predictions, dropped free text, repeat-guard hits). Runs are compared with
+an exact McNemar test on the per-question correctness in `score_report.json`.
 
 ## Results
 
@@ -163,7 +164,7 @@ Final runs of this code (Kaggle `notebook85bc7ddd8c`, `kaggle/final_ollama_quant
 
 \* 4 questions at a time on one GPU, so per-question times include waiting for the other three. The
 held-out run (`runs/heldout100/`) used an earlier revision of this code with the same prompts, tools and
-limits. Its 100 questions are a seeded sample (`scripts/sample_heldout.py`) of the 176 BIRD mini-dev
+limits. Its 100 questions are a seeded sample (stratified by database, seed 2026) of the 176 BIRD mini-dev
 questions on the same four databases, none shared with dev. I also looked at these 100 questions while
 choosing between agent variants, so 64% is slightly optimistic; the other 76 were never run.
 On the held-out run 801/801 tool calls carried a thought and 486/488 queries a prediction.
@@ -171,7 +172,7 @@ On the held-out run 801/801 tool calls carried a thought and 486/488 queries a p
 Where the time goes: in the Q8_0 dev run the agent waited 698.8 s for the model and 0.47 s for tools,
 in total. Every answer is produced by the model; the database is never the bottleneck.
 
-**Mechanism checks** (`scripts/summarize.py`, Q8_0 dev run): 118/118 tool calls carried a thought,
+**Mechanism checks** (counted from the logs, `runs/final_ollama/summary_dev.json`, Q8_0 dev run): 118/118 tool calls carried a thought,
 67/67 queries a prediction, 0 calls rejected; free text next to a call appeared in 52 of 110 turns and
 was dropped from the history every time.
 
@@ -366,9 +367,7 @@ text2sql_v2/         the agent (read in this order: runner, agent, tools, prompt
   telemetry.py       hardware + vLLM metrics sampler (Bonus 2)
   scoring.py         unmodified copy of the kit's scorer
 tests/               test_agent.py (no model needed)
-scripts/             summarize.py (compare runs), bench_native.py + quant_report.py (quantization),
-                     plot_timeline.py (Bonus 2), make_kaggle_notebook.py, sample_heldout.py,
-                     hello_tool_call.py (the assignment's step 3)
+scripts/             bench_native.py + quant_report.py (quantization), plot_timeline.py (Bonus 2)
 kaggle/              the notebooks behind the final Ollama and vLLM runs (each embeds the code)
 runs/                logs of every run quoted here (final_ollama, final_vllm, heldout100)
 data/                questions_heldout.json (176 BIRD mini-dev), questions_heldout100.json (the sample)
