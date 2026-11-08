@@ -1,0 +1,139 @@
+{
+ "vllm_c1": {
+  "correct": 17,
+  "n": 20,
+  "accuracy": 0.85,
+  "status": {
+   "ok": 19,
+   "max_steps": 1
+  },
+  "steps": 5.7,
+  "prompt_tokens": 37438,
+  "completion_tokens": 1012,
+  "median_wall_s": 57.0,
+  "llm_s": 1367.2,
+  "mechanism": "tool calls with a thought 123/123; turns with >1 tool call 8; rejected for missing fields 1; turns with free text next to the call (dropped from history) 52/114; queries with a prediction 75/75; repeat-guard hits 3",
+  "correct_ids": [
+   5,
+   32,
+   45,
+   47,
+   737,
+   740,
+   747,
+   779,
+   798,
+   850,
+   901,
+   912,
+   933,
+   1351,
+   1352,
+   1375,
+   1394
+  ]
+ },
+ "vllm_c2": {
+  "correct": 17,
+  "n": 20,
+  "accuracy": 0.85,
+  "status": {
+   "ok": 19,
+   "max_steps": 1
+  },
+  "steps": 5.7,
+  "prompt_tokens": 38458,
+  "completion_tokens": 998,
+  "median_wall_s": 64.9,
+  "llm_s": 1490.4,
+  "mechanism": "tool calls with a thought 123/123; turns with >1 tool call 8; rejected for missing fields 1; turns with free text next to the call (dropped from history) 52/114; queries with a prediction 74/74; repeat-guard hits 13",
+  "correct_ids": [
+   5,
+   32,
+   45,
+   47,
+   737,
+   740,
+   747,
+   779,
+   798,
+   850,
+   901,
+   912,
+   933,
+   1351,
+   1352,
+   1375,
+   1394
+  ]
+ },
+ "vllm_c4": {
+  "correct": 17,
+  "n": 20,
+  "accuracy": 0.85,
+  "status": {
+   "ok": 18,
+   "timeout": 1,
+   "max_steps": 1
+  },
+  "steps": 5.8,
+  "prompt_tokens": 37712,
+  "completion_tokens": 1004,
+  "median_wall_s": 78.6,
+  "llm_s": 2064.2,
+  "mechanism": "tool calls with a thought 124/124; turns with >1 tool call 8; rejected for missing fields 1; turns with free text next to the call (dropped from history) 51/115; queries with a prediction 77/77; repeat-guard hits 3",
+  "correct_ids": [
+   5,
+   32,
+   45,
+   47,
+   737,
+   740,
+   747,
+   779,
+   798,
+   850,
+   901,
+   912,
+   933,
+   1351,
+   1352,
+   1375,
+   1394
+  ]
+ },
+ "vllm_c8": {
+  "correct": 17,
+  "n": 20,
+  "accuracy": 0.85,
+  "status": {
+   "ok": 19,
+   "timeout": 1
+  },
+  "steps": 5.45,
+  "prompt_tokens": 34057,
+  "completion_tokens": 954,
+  "median_wall_s": 128.1,
+  "llm_s": 2940.7,
+  "mechanism": "tool calls with a thought 117/117; turns with >1 tool call 8; rejected for missing fields 1; turns with free text next to the call (dropped from history) 52/108; queries with a prediction 69/69; repeat-guard hits 1",
+  "correct_ids": [
+   5,
+   45,
+   47,
+   737,
+   740,
+   747,
+   779,
+   798,
+   850,
+   901,
+   912,
+   933,
+   1323,
+   1351,
+   1352,
+   1375,
+   1394
+  ]
+ }
+}

@@ -1,0 +1,196 @@
+{
+  "questions": 20,
+  "answered": 20,
+  "scored": 20,
+  "correct": 15,
+  "accuracy": 0.75,
+  "by_difficulty": {
+    "moderate": {
+      "scored": 10,
+      "correct": 5,
+      "accuracy": 0.5
+    },
+    "simple": {
+      "scored": 10,
+      "correct": 10,
+      "accuracy": 1.0
+    }
+  },
+  "by_db": {
+    "california_schools": {
+      "scored": 5,
+      "correct": 4,
+      "accuracy": 0.8
+    },
+    "formula_1": {
+      "scored": 5,
+      "correct": 4,
+      "accuracy": 0.8
+    },
+    "student_club": {
+      "scored": 5,
+      "correct": 3,
+      "accuracy": 0.6
+    },
+    "superhero": {
+      "scored": 5,
+      "correct": 4,
+      "accuracy": 0.8
+    }
+  },
+  "status_counts": {
+    "ok": 19,
+    "max_steps": 1
+  },
+  "missing": [],
+  "format_problems": [],
+  "duplicate_ids": [],
+  "unknown_ids": [],
+  "timing": {
+    "median_wall_time_s": 22.95,
+    "total_llm_time_s": 638.95,
+    "total_tool_time_s": 0.58
+  },
+  "per_question": [
+    {
+      "question_id": 46,
+      "db_id": "california_schools",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 5,
+      "db_id": "california_schools",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 32,
+      "db_id": "california_schools",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": false
+    },
+    {
+      "question_id": 45,
+      "db_id": "california_schools",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 47,
+      "db_id": "california_schools",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 850,
+      "db_id": "formula_1",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 901,
+      "db_id": "formula_1",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 912,
+      "db_id": "formula_1",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 933,
+      "db_id": "formula_1",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 989,
+      "db_id": "formula_1",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": false
+    },
+    {
+      "question_id": 1351,
+      "db_id": "student_club",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 1394,
+      "db_id": "student_club",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 1323,
+      "db_id": "student_club",
+      "difficulty": "moderate",
+      "status": "max_steps",
+      "correct": false
+    },
+    {
+      "question_id": 1352,
+      "db_id": "student_club",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": false
+    },
+    {
+      "question_id": 1375,
+      "db_id": "student_club",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 737,
+      "db_id": "superhero",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 747,
+      "db_id": "superhero",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 779,
+      "db_id": "superhero",
+      "difficulty": "simple",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 740,
+      "db_id": "superhero",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": true
+    },
+    {
+      "question_id": 798,
+      "db_id": "superhero",
+      "difficulty": "moderate",
+      "status": "ok",
+      "correct": false
+    }
+  ]
+}

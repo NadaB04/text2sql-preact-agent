@@ -1,0 +1,21 @@
+{
+  "design": "preact",
+  "config": {
+    "base_url": "http://127.0.0.1:11434/v1",
+    "model": "qwen3.5:4b-q8_0",
+    "temperature": 0.0,
+    "max_tokens": 1024,
+    "time_limit_s": 300.0,
+    "call_timeout_s": 120.0,
+    "max_steps": 20,
+    "think": false,
+    "samples": 5,
+    "vote_temperature": 0.7,
+    "max_rounds": 3,
+    "answer": true
+  },
+  "questions": "/kaggle/working/questions.json",
+  "n": 100,
+  "concurrency": 4,
+  "started": "2026-11-08 16:31:59"
+}

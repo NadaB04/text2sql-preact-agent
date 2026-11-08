@@ -1,0 +1,6 @@
+langgraph>=1.0
+langchain-openai>=1.0
+pydantic>=2
+psutil            # --telemetry (Bonus 2)
+pytest
+matplotlib        # scripts/plot_timeline.py only

@@ -1,0 +1,802 @@
+[
+ {
+  "question_id": 23,
+  "db_id": "california_schools",
+  "question": "List the names of schools with more than 30 difference in enrollements between K-12 and ages 5-17? Please also give the full street adress of the schools.",
+  "evidence": "Diffrence in enrollement = `Enrollment (K-12)` - `Enrollment (Ages 5-17)`",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.School, T1.Street FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.`Enrollment (K-12)` - T2.`Enrollment (Ages 5-17)` > 30"
+ },
+ {
+  "question_id": 27,
+  "db_id": "california_schools",
+  "question": "What is the average score in writing for the schools that were opened after 1991 or closed before 2000? List the school names along with the score. Also, list the communication number of the schools if there is any.",
+  "evidence": "Communication number refers to phone number.",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.School, T1.AvgScrWrite, T2.Phone FROM schools AS T2 LEFT JOIN satscores AS T1 ON T2.CDSCode = T1.cds WHERE strftime('%Y', T2.OpenDate) > '1991' OR strftime('%Y', T2.ClosedDate) < '2000'"
+ },
+ {
+  "question_id": 31,
+  "db_id": "california_schools",
+  "question": "What is the eligible free rate of the 10th and 11th schools with the highest enrolment for students in grades 1 through 12?",
+  "evidence": "K-12 refers to students in grades 1 through 12; Eligible free rate for K-12 = `Free Meal Count (K-12)` / `Enrollment (K-12)`",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT CAST(`Free Meal Count (K-12)` AS REAL) / `Enrollment (K-12)` FROM frpm ORDER BY `Enrollment (K-12)` DESC LIMIT 9, 2"
+ },
+ {
+  "question_id": 37,
+  "db_id": "california_schools",
+  "question": "What is the complete address of the school with the lowest excellence rate? Indicate the Street, City, Zip and State.",
+  "evidence": "Execellence Rate = NumGE1500 / NumTstTakr; complete address has Street, City, State, Zip code",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.Street, T2.City, T2.State, T2.Zip FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY CAST(T1.NumGE1500 AS REAL) / T1.NumTstTakr ASC LIMIT 1"
+ },
+ {
+  "question_id": 39,
+  "db_id": "california_schools",
+  "question": "What is the average number of test takers from Fresno schools that opened between 1/1/1980 and 12/31/1980?",
+  "evidence": "between 1/1/1980 and 12/31/1980 means the year = 1980",
+  "difficulty": "simple",
+  "gold_sql": "SELECT AVG(T1.NumTstTakr) FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE strftime('%Y', T2.OpenDate) = '1980' AND T2.County = 'Fresno'"
+ },
+ {
+  "question_id": 40,
+  "db_id": "california_schools",
+  "question": "What is the telephone number for the school with the lowest average score in reading in Fresno Unified?",
+  "evidence": "Fresno Unified is a name of district;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.Phone FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.District = 'Fresno Unified' AND T1.AvgScrRead IS NOT NULL ORDER BY T1.AvgScrRead ASC LIMIT 1"
+ },
+ {
+  "question_id": 41,
+  "db_id": "california_schools",
+  "question": "List the names of virtual schools that are among the top 5 in their respective counties based on average reading scores.",
+  "evidence": "Exclusively virtual refers to Virtual = 'F'; respective counties means PARTITION BY County",
+  "difficulty": "simple",
+  "gold_sql": "SELECT School FROM (SELECT T2.School,T1.AvgScrRead, RANK() OVER (PARTITION BY T2.County ORDER BY T1.AvgScrRead DESC) AS rnk FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.Virtual = 'F' ) ranked_schools WHERE rnk <= 5"
+ },
+ {
+  "question_id": 48,
+  "db_id": "california_schools",
+  "question": "What is the ratio of merged Unified School District schools in Orange County to merged Elementary School District schools?",
+  "evidence": "Elementary School District refers to DOC = 52; Unified School District refers to DOC = 54.",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT CAST(SUM(CASE WHEN DOC = 54 THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN DOC = 52 THEN 1 ELSE 0 END) FROM schools WHERE StatusType = 'Merged' AND County = 'Orange'"
+ },
+ {
+  "question_id": 50,
+  "db_id": "california_schools",
+  "question": "What is the postal street address for the school with the 7th highest Math average? Indicate the school's name.",
+  "evidence": "Postal street and mailing street are synonyms.",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.MailStreet, T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY T1.AvgScrMath DESC LIMIT 6, 1"
+ },
+ {
+  "question_id": 62,
+  "db_id": "california_schools",
+  "question": "What is the total number of non-chartered schools in the county of Los Angeles with a percent (%) of eligible free meals for grades 1 through 12 that is less than 0.18%?",
+  "evidence": "non-chartered schools refer to schools whose Charter = 0; K-12 means grades 1 through 12; percent of eligible free rate for K-12 = `Free Meal Count (K-12)` * 100 / `Enrollment (K-12)`",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT COUNT(T2.School) FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.County = 'Los Angeles' AND T2.Charter = 0 AND CAST(T1.`Free Meal Count (K-12)` AS REAL) * 100 / T1.`Enrollment (K-12)` < 0.18"
+ },
+ {
+  "question_id": 72,
+  "db_id": "california_schools",
+  "question": "How many students from the ages of 5 to 17 are enrolled at the State Special School school in Fremont for the 2014-2015 academic year?",
+  "evidence": "State Special School means EdOpsCode = 'SSS'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.`Enrollment (Ages 5-17)` FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.EdOpsCode = 'SSS' AND T2.City = 'Fremont' AND T1.`Academic Year` BETWEEN 2014 AND 2015"
+ },
+ {
+  "question_id": 79,
+  "db_id": "california_schools",
+  "question": "Between San Diego and Santa Barbara, which county offers the most number of schools that does not offer physical building? Indicate the amount.",
+  "evidence": "'Does not offer physical building' means Virtual = F in the database.",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT County, COUNT(Virtual) FROM schools WHERE (County = 'San Diego' OR County = 'Santa Barbara') AND Virtual = 'F' GROUP BY County ORDER BY COUNT(Virtual) DESC LIMIT 1"
+ },
+ {
+  "question_id": 83,
+  "db_id": "california_schools",
+  "question": "Of the schools that offers a magnet program serving a grade span of Kindergarten to 8th grade, how many offers Multiple Provision Types? List the number of cities that offers a Kindergarten to 8th grade span and indicate how many schools are there serving such grade span for each city.",
+  "evidence": "Kindergarten to 8th grade refers to K-8; 'Offers a magnet program' means Magnet = 1; Multiple Provision Types refers to `NSLP Provision Status` = 'Multiple Provision Types'",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT T2.City, COUNT(T2.CDSCode) FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.Magnet = 1 AND T2.GSoffered = 'K-8' AND T1.`NSLP Provision Status` = 'Multiple Provision Types' GROUP BY T2.City"
+ },
+ {
+  "question_id": 87,
+  "db_id": "california_schools",
+  "question": "What are the valid e-mail addresses of the administrator of the school located in the San Bernardino county, City of San Bernardino City Unified that opened between 1/1/2009 to 12/31/2010 whose school types are public Intermediate/Middle Schools and Unified Schools?",
+  "evidence": "Intermediate/Middle Schools refers to SOC = 62; Unified School refers to DOC = 54; years between 2009 and 2010 can refer to 'between 1/1/2009 to 12/31/2010'",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT T2.AdmEmail1, T2.AdmEmail2 FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.County = 'San Bernardino' AND T2.City = 'San Bernardino' AND T2.DOC = 54 AND strftime('%Y', T2.OpenDate) BETWEEN '2009' AND '2010' AND T2.SOC = 62"
+ },
+ {
+  "question_id": 724,
+  "db_id": "superhero",
+  "question": "Please list the superhero names of all the superheroes that have blue eyes and blond hair.",
+  "evidence": "blue eyes refers to colour = 'Blue' and eye_colour_id = colour.id; blond hair refers to colour = 'Blond' and hair_colour_id = colour.id; super power of \"Agility\" refers to power_name = 'Agility'",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id INNER JOIN colour AS T3 ON T1.hair_colour_id = T3.id WHERE T2.colour = 'Blue' AND T3.colour = 'Blond'"
+ },
+ {
+  "question_id": 730,
+  "db_id": "superhero",
+  "question": "List the superheroes from Marvel Comics who have the super power of 'Super Strength'.",
+  "evidence": "the superheroes from Marvel Comics refers to publisher_name = 'Marvel Comics'; super power of \"Super Strength\" refers to power_name = 'Super Strength';",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT superhero_name FROM superhero AS T1 WHERE EXISTS (SELECT 1 FROM hero_power AS T2 INNER JOIN superpower AS T3 ON T2.power_id = T3.id WHERE T3.power_name = 'Super Strength' AND T1.id = T2.hero_id)AND EXISTS (SELECT 1 FROM publisher AS T4 WHERE T4.publisher_name = 'Marvel Comics' AND T1.publisher_id = T4.id)"
+ },
+ {
+  "question_id": 732,
+  "db_id": "superhero",
+  "question": "Which publisher published the slowest superhero?",
+  "evidence": "the slowest superhero refers to attribute_name = 'Speed' where MIN(attribute_value); publisher refers to publisher_name",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.publisher_name FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id INNER JOIN hero_attribute AS T3 ON T1.id = T3.hero_id INNER JOIN attribute AS T4 ON T3.attribute_id = T4.id WHERE T4.attribute_name = 'Speed' ORDER BY T3.attribute_value LIMIT 1"
+ },
+ {
+  "question_id": 733,
+  "db_id": "superhero",
+  "question": "How many gold-eyed superheroes did Marvel Comics publish?",
+  "evidence": "gold-eyed refers to colour = 'Gold' where eye_colour_id = colour.id; superheroes that Marvel Comics published refers to publisher_name = 'Marvel Comics'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT COUNT(T1.id) FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id INNER JOIN colour AS T3 ON T1.eye_colour_id = T3.id WHERE T2.publisher_name = 'Marvel Comics' AND T3.colour = 'Gold'"
+ },
+ {
+  "question_id": 736,
+  "db_id": "superhero",
+  "question": "Who is the dumbest superhero?",
+  "evidence": "the dumbest superhero refers to MIN(attribute_value) where attribute_name = 'Intelligence'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN hero_attribute AS T2 ON T1.id = T2.hero_id INNER JOIN attribute AS T3 ON T2.attribute_id = T3.id WHERE T3.attribute_name = 'Intelligence' ORDER BY T2.attribute_value LIMIT 1"
+ },
+ {
+  "question_id": 743,
+  "db_id": "superhero",
+  "question": "What is the percentage of superheroes who act in their own self-interest or make decisions based on their own moral code? Indicate how many of the said superheroes were published by Marvel Comics.",
+  "evidence": "published by Marvel Comics refers to publisher_name = 'Marvel Comics'; superheroes who act in their own self-interest or make decisions based on their own moral code refers to alignment = 'Bad'; calculation = MULTIPLY(DIVIDE(SUM(alignment = 'Bad); count(id)), 100)",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT (CAST(COUNT(*) AS REAL) * 100 / (SELECT COUNT(*) FROM superhero)), CAST(SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS REAL) FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id INNER JOIN alignment AS T3 ON T3.id = T1.alignment_id WHERE T3.alignment = 'Bad'"
+ },
+ {
+  "question_id": 744,
+  "db_id": "superhero",
+  "question": "Between DC and Marvel Comics, which publisher has published more superheroes? Find the difference in the number of superheroes they have published.",
+  "evidence": "DC refers to publisher_name = 'DC Comics'; Marvel Comics refers to publisher_name = 'Marvel Comics'; calculation = SUBTRACT(SUM(publisher_name = 'Marvel Comics'), SUM(publisher_name = 'DC Comics'))",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.publisher_name = 'DC Comics' THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id"
+ },
+ {
+  "question_id": 745,
+  "db_id": "superhero",
+  "question": "Give the publisher ID of Star Trek.",
+  "evidence": "Star Trek is the publisher_name;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT id FROM publisher WHERE publisher_name = 'Star Trek'"
+ },
+ {
+  "question_id": 750,
+  "db_id": "superhero",
+  "question": "What is the average weight of all female superheroes?",
+  "evidence": "female refers to gender = 'Female'; average weight refers to AVG(weight_kg)",
+  "difficulty": "simple",
+  "gold_sql": "SELECT AVG(T1.weight_kg) FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id WHERE T2.gender = 'Female'"
+ },
+ {
+  "question_id": 751,
+  "db_id": "superhero",
+  "question": "List down at least five superpowers of male superheroes.",
+  "evidence": "male refers to gender = 'Male'; superpowers refers to power_name;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.power_name FROM superhero AS T1 INNER JOIN hero_power AS T2 ON T1.id = T2.hero_id INNER JOIN superpower AS T3 ON T3.id = T2.power_id INNER JOIN gender AS T4 ON T4.id = T1.gender_id WHERE T4.gender = 'Male' LIMIT 5"
+ },
+ {
+  "question_id": 753,
+  "db_id": "superhero",
+  "question": "Among the superheroes with height from 170 to 190, list the names of the superheroes with no eye color.",
+  "evidence": "height from 170 to 190 refers to height_cm BETWEEN 170 AND 190; no eye color refers to colour = 'No Colour'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT DISTINCT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.height_cm BETWEEN 170 AND 190 AND T2.colour = 'No Colour'"
+ },
+ {
+  "question_id": 761,
+  "db_id": "superhero",
+  "question": "Among the male superheroes, list the super hero names of superheroes with weight greater than the 79% average weight of all superheroes.",
+  "evidence": "super hero names refers to superhero_name;male superheros refers to gender = 'Male';Calculation = weight_kg > MULTIPLY(AVG(weight_kg), 0.79)",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id WHERE T2.gender = 'Male' AND T1.weight_kg * 100 > ( SELECT AVG(weight_kg) FROM superhero ) * 79"
+ },
+ {
+  "question_id": 764,
+  "db_id": "superhero",
+  "question": "What are the superpowers of heroes with ID 1?",
+  "evidence": "superpowers refers to power_name; heroes with ID 1 refers to hero_id = 1;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT DISTINCT T2.power_name FROM hero_power AS T1 INNER JOIN superpower AS T2 ON T1.power_id = T2.id WHERE T1.hero_id = 1"
+ },
+ {
+  "question_id": 765,
+  "db_id": "superhero",
+  "question": "How many heroes have stealth power?",
+  "evidence": "stealth power refers to power_name = 'Stealth';",
+  "difficulty": "simple",
+  "gold_sql": "SELECT COUNT(T1.hero_id) FROM hero_power AS T1 INNER JOIN superpower AS T2 ON T1.power_id = T2.id WHERE T2.power_name = 'Stealth'"
+ },
+ {
+  "question_id": 772,
+  "db_id": "superhero",
+  "question": "List the eyes, hair and skin colour of all female superheroes published by Dark Horse Comics.",
+  "evidence": "eyes refers to eye_colour_id; hair refers to hair_colour_id; skin colour refers to skin_colour_id; female superheroes refers to gender = 'Female'; published by Dark Horse Comics refers to publisher_name = 'Dark Horse Comics';",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT T1.eye_colour_id, T1.hair_colour_id, T1.skin_colour_id FROM superhero AS T1 INNER JOIN publisher AS T2 ON T2.id = T1.publisher_id INNER JOIN gender AS T3 ON T3.id = T1.gender_id WHERE T2.publisher_name = 'Dark Horse Comics' AND T3.gender = 'Female'"
+ },
+ {
+  "question_id": 775,
+  "db_id": "superhero",
+  "question": "What is the percentage of blue female superheroes among all female superheroes?",
+  "evidence": "percentage = MULTIPLY(DIVIDE(SUM(colour = 'Blue' WHERE gender = 'Female'), COUNT(gender = 'Female')), 100); blue refers to the color = 'Blue' WHERE skin_colour_id = colour.id; female refers to gender = 'Female';",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT CAST(COUNT(CASE WHEN T3.colour = 'Blue' THEN T1.id ELSE NULL END) AS REAL) * 100 / COUNT(T1.id) FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id INNER JOIN colour AS T3 ON T1.skin_colour_id = T3.id WHERE T2.gender = 'Female'"
+ },
+ {
+  "question_id": 782,
+  "db_id": "superhero",
+  "question": "List the heroes' names whose eyes and hair colours are both black.",
+  "evidence": "heroes' names refers to superhero_name; eyes and hair colours are both black refers to eye_colour_id AND hair_colour_id WHERE colour.colour = 'Black';",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id AND T1.hair_colour_id = T2.id WHERE T2.colour = 'Black'"
+ },
+ {
+  "question_id": 785,
+  "db_id": "superhero",
+  "question": "Describe the names of neutral alignment superheroes.",
+  "evidence": "names of superheroes refers to superhero_name; neutral alignment refers to alignment = 'Neutral';",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id WHERE T2.alignment = 'Neutral'"
+ },
+ {
+  "question_id": 786,
+  "db_id": "superhero",
+  "question": "How many heroes have the highest attribute value in strength?",
+  "evidence": "highest attribute value in strength refers to MAX(attribute_value) WHERE attribute_name = 'Strength';",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT COUNT(T1.hero_id) FROM hero_attribute AS T1 INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id WHERE T2.attribute_name = 'Strength' AND T1.attribute_value = ( SELECT MAX(attribute_value) FROM hero_attribute )"
+ },
+ {
+  "question_id": 788,
+  "db_id": "superhero",
+  "question": "How many percent of female heroes were published by Marvel Comics?",
+  "evidence": "percent = MULTIPLY(DIVIDE(SUM(gender = 'Female' WHERE publisher_name = 'Marvel Comics'), COUNT(publisher_name = 'Marvel Comics')), 100); female heroes refers to gender = 'Female'; Marvel Comics refers to publisher_name = 'Marvel Comics';",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT CAST(COUNT(CASE WHEN T3.gender = 'Female' AND T2.publisher_name = 'Marvel Comics' THEN 1 ELSE NULL END) AS REAL) / COUNT(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE NULL END) * 100 FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id INNER JOIN gender AS T3 ON T1.gender_id = T3.id"
+ },
+ {
+  "question_id": 790,
+  "db_id": "superhero",
+  "question": "Calculate the difference between Emil Blonsky's weight and Charles Chandler's weight.",
+  "evidence": "difference = SUBTRACT(SUM(weight_kg WHERE full_name = 'Emil Blonsky'), SUM(weight_kg WHERE full_name = 'Charles Chandler')); Emil Blonsky is the full name of superhero; Charles Chandler is the full name of superhero;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT ( SELECT weight_kg FROM superhero WHERE full_name LIKE 'Emil Blonsky' ) - ( SELECT weight_kg FROM superhero WHERE full_name LIKE 'Charles Chandler' ) AS CALCULATE"
+ },
+ {
+  "question_id": 796,
+  "db_id": "superhero",
+  "question": "State all of 3-D Man's attributes along with their values.",
+  "evidence": "3-D Man is the superhero_name. attributes refers to attribute_name; values refers to attribute_value;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.attribute_name, T2.attribute_value FROM superhero AS T1 INNER JOIN hero_attribute AS T2 ON T1.id = T2.hero_id INNER JOIN attribute AS T3 ON T2.attribute_id = T3.id WHERE T1.superhero_name = '3-D Man'"
+ },
+ {
+  "question_id": 797,
+  "db_id": "superhero",
+  "question": "Which superheroes have blue eyes with brown hair?",
+  "evidence": "which superheroes refers to superhero_name; blue eyes refers to color = 'Blue' and color.id = eye_colour_id; brown hair refers to color = 'Brown' and color.id = hair_colour_id;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id INNER JOIN colour AS T3 ON T1.hair_colour_id = T3.id WHERE T2.colour = 'Blue' AND T3.colour = 'Brown'"
+ },
+ {
+  "question_id": 800,
+  "db_id": "superhero",
+  "question": "Calculate the percentage of superheroes with blue eyes.",
+  "evidence": "percentage = MULTIPLY(DIVIDE(SUM(superhero_name WHERE color = 'Blue'), COUNT(superhero_name)), 100.0); blue eyes refers to color = 'Blue' and color.id =  eye_colour_id = 7;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT CAST(COUNT(CASE WHEN T2.colour = 'Blue' THEN 1 ELSE NULL END) AS REAL) * 100 / COUNT(T1.id) FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id"
+ },
+ {
+  "question_id": 806,
+  "db_id": "superhero",
+  "question": "Provide the eye colour of the superhero who has Karen Beecher-Duncan as their full name.",
+  "evidence": "eye colour refers to colour.colour where eye_colour_id = colour.id; Karen Beecher-Duncan is the full name of superhero;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.colour FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.full_name = 'Karen Beecher-Duncan'"
+ },
+ {
+  "question_id": 819,
+  "db_id": "superhero",
+  "question": "In superheroes with missing weight data, calculate the difference between the number of superheroes with blue eyes and no eye color.",
+  "evidence": "missing weight data refers to weight_kg = 0 OR T1.weight_kg = NULL; difference = SUBTRACT(SUM(colour.id = 7), SUM(colour.id = 1)); blue eyes refers to eye_colour_id WHERE colour.id = 7; no eye color refers to eye_colour_id WHERE colour.id = 1;",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT SUM(CASE WHEN T2.id = 7 THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.id = 1 THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.weight_kg = 0 OR T1.weight_kg is NULL"
+ },
+ {
+  "question_id": 822,
+  "db_id": "superhero",
+  "question": "How many green-skinned villains are there in the superhero universe?",
+  "evidence": "green-skinned refers to colour.colour = 'Green' WHERE skin_colour_id = colour.id; villains refers to alignment = 'Bad';",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT COUNT(T1.id) FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id INNER JOIN colour AS T3 ON T1.skin_colour_id = T3.id WHERE T2.alignment = 'Bad' AND T3.colour = 'Green'"
+ },
+ {
+  "question_id": 846,
+  "db_id": "formula_1",
+  "question": "Please list the reference names of the drivers who are eliminated in the first period in race number 20.",
+  "evidence": "driver reference name refers to driverRef; first qualifying period refers to q1; drivers who are eliminated in the first qualifying period refers to 5 drivers with MAX(q1); race number refers to raceId;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.driverRef FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = 20 ORDER BY T1.q1 DESC LIMIT 5"
+ },
+ {
+  "question_id": 859,
+  "db_id": "formula_1",
+  "question": "What's Bruno Senna's Q1 result in the qualifying race No. 354?",
+  "evidence": "race number refers to raceId; Bruno Senna refers to the full name of the driver; Full name of the driver refers to drivers.forename and drivers.surname;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.q1 FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = 354 AND T2.forename = 'Bruno' AND T2.surname = 'Senna'"
+ },
+ {
+  "question_id": 861,
+  "db_id": "formula_1",
+  "question": "What is his number of the driver who finished 0:01:54 in the Q3 of qualifying race No.903?",
+  "evidence": "race number refers to raceId; finished 0:0M:SS in the Q3 refers to q3 LIKE 'M:SS%'",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.number FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = 903 AND T1.q3 LIKE '1:54%'"
+ },
+ {
+  "question_id": 862,
+  "db_id": "formula_1",
+  "question": "For the Bahrain Grand Prix in 2007, how many drivers not finished the game?",
+  "evidence": "Bahrain Grand Prix refers to races.name = 'Bahrain Grand Prix'; drivers who finished the race refers to time is not empty (i.e. time IS NOT NULL);",
+  "difficulty": "simple",
+  "gold_sql": "SELECT COUNT(T3.driverId) FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T1.year = 2007 AND T1.name = 'Bahrain Grand Prix' AND T2.time IS NULL"
+ },
+ {
+  "question_id": 865,
+  "db_id": "formula_1",
+  "question": "For all the drivers who finished the game in race No. 592, who is the oldest?",
+  "evidence": "drivers who finished the race refers to time is not empty (i.e. time IS NOT NULL); race number refers to raceId; date of birth refers to drivers.dob; The larger the birthday value, the younger the person is, and vice versa;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.forename, T1.surname FROM drivers AS T1 INNER JOIN results AS T2 ON T2.driverId = T1.driverId WHERE T2.raceId = 592 AND T2.time IS NOT NULL AND T1.dob IS NOT NULL ORDER BY T1.dob ASC LIMIT 1"
+ },
+ {
+  "question_id": 868,
+  "db_id": "formula_1",
+  "question": "Where is Malaysian Grand Prix held? Give the location coordinates.",
+  "evidence": "location coordinates refers to (lat, lng); Malaysian Grand Prix refers to races.name = 'Malaysian Grand Prix'",
+  "difficulty": "simple",
+  "gold_sql": "SELECT DISTINCT T1.lat, T1.lng FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T2.name = 'Malaysian Grand Prix'"
+ },
+ {
+  "question_id": 877,
+  "db_id": "formula_1",
+  "question": "For all the drivers who finished the game in race No. 872, who is the youngest?",
+  "evidence": "race number refers to raceId; drivers who finished the race refers to time has value; the youngest is a driver where MAX(dob);",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.forename, T1.surname FROM drivers AS T1 INNER JOIN results AS T2 ON T2.driverId = T1.driverId WHERE T2.raceId = 872 AND T2.time IS NOT NULL ORDER BY T1.dob DESC LIMIT 1"
+ },
+ {
+  "question_id": 880,
+  "db_id": "formula_1",
+  "question": "Paul di Resta was in the No. 853 race, what percent faster did he finish in the 853rd race than the next race for the fastest lap speed?",
+  "evidence": "Paul di Resta refers to the full name of the driver; Full name of the driver refers to drivers.forename ='Paul' and drivers.surname = 'di Resta'; race number refers to raceId; percentage = DIVIDE(SUBTRACT(fastestLapSpeed(raceId = 853), (fastestLapSpeed (raceId = 854)) * 100 , (fastestLapSpeed(raceId = 853))",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT (SUM(IIF(T2.raceId = 853, T2.fastestLapSpeed, 0)) - SUM(IIF(T2.raceId = 854, T2.fastestLapSpeed, 0))) * 100 / SUM(IIF(T2.raceId = 853, T2.fastestLapSpeed, 0)) FROM drivers AS T1 INNER JOIN results AS T2 ON T2.driverId = T1.driverId WHERE T1.forename = 'Paul' AND T1.surname = 'di Resta'"
+ },
+ {
+  "question_id": 881,
+  "db_id": "formula_1",
+  "question": "For the drivers who took part in the race in 1983/7/16, what's their race completion rate?",
+  "evidence": "DIVIDE(COUNT(driverid when time has value ), (COUNT(driverid )) as percentage; in 1983/7/16 refers to when date = '1983-07-16'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT CAST(COUNT(CASE WHEN T2.time IS NOT NULL THEN T2.driverId END) AS REAL) * 100 / COUNT(T2.driverId) FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId WHERE T1.date = '1983-07-16'"
+ },
+ {
+  "question_id": 892,
+  "db_id": "formula_1",
+  "question": "State the driver with the most points scored. Find his full name with that points.",
+  "evidence": "the most points scored refers to max(points); Full name of the driver refers to drivers.forename and drivers.surname;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.forename, T3.surname, T2.points FROM races AS T1 INNER JOIN driverStandings AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId ORDER BY T2.points DESC LIMIT 1"
+ },
+ {
+  "question_id": 895,
+  "db_id": "formula_1",
+  "question": "What is the average lap time for Lewis Hamilton in the 2009 Malaysian Grand Prix?",
+  "evidence": "average lap time = AVG(milliseconds); 'Lewis Hamilton' refers to the full name of the driver; Full name of the driver refers to drivers.forename and drivers.surname; 'Malaysian Grand Prix' refers to races.name = 'Malaysian Grand Prix'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT AVG(T2.milliseconds) FROM races AS T1 INNER JOIN lapTimes AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Lewis' AND T3.surname = 'Hamilton' AND T1.year = 2009 AND T1.name = 'Malaysian Grand Prix'"
+ },
+ {
+  "question_id": 896,
+  "db_id": "formula_1",
+  "question": "Calculate the percentage whereby Hamilton was not at the 1st track of the the f1 circuit since 2010.",
+  "evidence": "percentage = DIVIDE(COUNT(raceId) where surname = 'Hamilton' and position>1), (COUNT(raceId) where surname = 'Hamilton'); since 2010 refers to year >= 2010",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT CAST(COUNT(CASE WHEN T2.position <> 1 THEN T2.position END) AS REAL) * 100 / COUNT(T2.driverStandingsId) FROM races AS T1 INNER JOIN driverStandings AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.surname = 'Hamilton' AND T1.year >= 2010"
+ },
+ {
+  "question_id": 897,
+  "db_id": "formula_1",
+  "question": "Name the driver with the most winning. Mention his nationality and what is his maximum point scores.",
+  "evidence": "Full name of the driver refers to drivers.forename and drivers.surname; the most winning refers to MAX(COUNT(wins)); average point scores refers to MAX(points);",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.forename, T1.surname, T1.nationality, MAX(T2.points) FROM drivers AS T1 INNER JOIN driverStandings AS T2 ON T2.driverId = T1.driverId WHERE T2.wins >= 1 GROUP BY T1.forename, T1.surname, T1.nationality ORDER BY COUNT(T2.wins) DESC LIMIT 1"
+ },
+ {
+  "question_id": 902,
+  "db_id": "formula_1",
+  "question": "Which race was Alex Yoong in when he was in track number less than 20?",
+  "evidence": "Alex Yoong refers to the full name of the driver; Full name of the driver refers to drivers.forename and drivers.surname;track number less than 10 refers to position < 20",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.name FROM races AS T1 INNER JOIN driverStandings AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Alex' AND T3.surname = 'Yoong' AND T2.position < 20"
+ },
+ {
+  "question_id": 904,
+  "db_id": "formula_1",
+  "question": "State the race and year of race in which Michael Schumacher had his fastest lap.",
+  "evidence": "fastest lap refers to min(milliseconds); Alex Yoong refers to the full name of the driver; Full name of the driver refers to drivers.forename and drivers.surname;",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.name, T1.year FROM races AS T1 INNER JOIN lapTimes AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Michael' AND T3.surname = 'Schumacher' ORDER BY T2.milliseconds ASC LIMIT 1"
+ },
+ {
+  "question_id": 910,
+  "db_id": "formula_1",
+  "question": "What's the location coordinates of Silverstone Circuit?",
+  "evidence": "location coordinates refers to (lat, lng); Silverstone Circuit refers to circuits.name = 'Silverstone Circuit'",
+  "difficulty": "simple",
+  "gold_sql": "SELECT lat, lng FROM circuits WHERE name = 'Silverstone Circuit'"
+ },
+ {
+  "question_id": 915,
+  "db_id": "formula_1",
+  "question": "Which country is the oldest driver from?",
+  "evidence": "date of birth refers to drivers.dob; The larger the birthday value, the younger the person is, and vice versa;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT nationality FROM drivers WHERE dob IS NOT NULL ORDER BY dob ASC LIMIT 1"
+ },
+ {
+  "question_id": 928,
+  "db_id": "formula_1",
+  "question": "Which driver ranked the first in the Canadian Grand Prix in 2007? Please give his reference name.",
+  "evidence": "reference name refers to driverRef; Canadian Grand Prix refers to races.name = 'Canadian Grand Prix';",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.forename, T3.surname, T3.driverRef FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T1.name = 'Canadian Grand Prix' AND T2.rank = 1 AND T1.year = 2007"
+ },
+ {
+  "question_id": 930,
+  "db_id": "formula_1",
+  "question": "In which Formula_1 race did Lewis Hamilton rank the highest?",
+  "evidence": "rank the highest refers to min(rank); Lewis Hamilton refers to the full name of the driver; Full name of the driver refers to drivers.forename and drivers.surname;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT name FROM races WHERE raceId IN ( SELECT raceId FROM results WHERE rank = 1 AND driverId = ( SELECT driverId FROM drivers WHERE forename = 'Lewis' AND surname = 'Hamilton' ) )"
+ },
+ {
+  "question_id": 931,
+  "db_id": "formula_1",
+  "question": "What was the fastest lap speed among all drivers in the 2009 Spanish Grand Prix?",
+  "evidence": "the fastest lap speed among all refers to max(fastestLapSpeed); Spanish Grand Prix refers to races.name = 'Spanish Grand Prix';",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.fastestLapSpeed FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId WHERE T1.name = 'Spanish Grand Prix' AND T1.year = 2009 AND T2.fastestLapSpeed IS NOT NULL ORDER BY T2.fastestLapSpeed DESC LIMIT 1"
+ },
+ {
+  "question_id": 937,
+  "db_id": "formula_1",
+  "question": "What's the finish time for the driver who ranked second in 2008's AustChineseralian Grand Prix?",
+  "evidence": "finish time refers to time; Chinese Grand Prix refers to races.name = 'Chinese Grand Prix';",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.time FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T1.rank = 2 AND T2.name = 'Chinese Grand Prix' AND T2.year = 2008"
+ },
+ {
+  "question_id": 940,
+  "db_id": "formula_1",
+  "question": "Among the drivers that finished the race in the 2008 Chinese Grand Prix, how many of them have participated in Formula_1 races?",
+  "evidence": "COUNT(raceID) > 0 reveals that this driver participated in races; drivers who finished the race refers to time has value.",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT COUNT(*) FROM ( SELECT T1.driverId FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T2.name = 'Chinese Grand Prix' AND T2.year = 2008 AND T1.time IS NOT NULL GROUP BY T1.driverId HAVING COUNT(T2.raceId) > 0 )"
+ },
+ {
+  "question_id": 944,
+  "db_id": "formula_1",
+  "question": "How much faster in percentage is the champion than the driver who finished the race last in the 2008 Australian Grand Prix?",
+  "evidence": "how much faster in percentage = divide(subtract(incremental time, champion time), last_driver time) * 100; last driver finished time = incremental time + champion time; only champion's finished time is represented by 'HH:MM:SS.mmm'; finished the game refers to time is not null",
+  "difficulty": "challenging",
+  "gold_sql": "WITH time_in_seconds AS ( SELECT T1.positionOrder, CASE WHEN T1.positionOrder = 1 THEN (CAST(SUBSTR(T1.time, 1, 1) AS REAL) * 3600) + (CAST(SUBSTR(T1.time, 3, 2) AS REAL) * 60) + CAST(SUBSTR(T1.time, 6) AS REAL) ELSE CAST(SUBSTR(T1.time, 2) AS REAL) END AS time_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T2.name = 'Australian Grand Prix' AND T1.time IS NOT NULL AND T2.year = 2008 ), champion_time AS ( SELECT time_seconds FROM time_in_seconds WHERE positionOrder = 1), last_driver_incremental AS ( SELECT time_seconds FROM time_in_seconds WHERE positionOrder = (SELECT MAX(positionOrder) FROM time_in_seconds) ) SELECT (CAST((SELECT time_seconds FROM last_driver_incremental) AS REAL) * 100) / (SELECT time_seconds + (SELECT time_seconds FROM last_driver_incremental) FROM champion_time)"
+ },
+ {
+  "question_id": 945,
+  "db_id": "formula_1",
+  "question": "How many circuits are there in Adelaide, Australia?",
+  "evidence": "Australia is the country; Melbourne is the location of circuit;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT COUNT(circuitId) FROM circuits WHERE location = 'Adelaide' AND country = 'Australia'"
+ },
+ {
+  "question_id": 951,
+  "db_id": "formula_1",
+  "question": "How many Japanese constructors have 0 points in 2 races?",
+  "evidence": "2 races refers to COUNT(raceID) = 2; Japanese refers to constructors.nationality = 'Japanese';",
+  "difficulty": "simple",
+  "gold_sql": "SELECT COUNT(T1.raceId) FROM constructorStandings AS T1 INNER JOIN constructors AS T2 on T1.constructorId = T2.constructorId WHERE T1.points = 0 AND T2.nationality = 'Japanese' GROUP BY T1.constructorId HAVING COUNT(raceId) = 2"
+ },
+ {
+  "question_id": 959,
+  "db_id": "formula_1",
+  "question": "What is the fastest lap number of the champion in 2009?",
+  "evidence": "in 2009 refers to year = 2009; Only the time of the champion shows in the format of \"hour: minutes: seconds.millionsecond\"",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.fastestLap FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T2.year = 2009 AND T1.time LIKE '_:%:__.___'"
+ },
+ {
+  "question_id": 960,
+  "db_id": "formula_1",
+  "question": "What is the average of fastest lap speed in the 2009 Spanish Grand Prix race?",
+  "evidence": "Spanish Grand Prix is the name of race refers to name = 'Spanish Grand Prix'; average fastest lap speed refers to avg(fastestLapSpeed);",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT AVG(T1.fastestLapSpeed) FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T2.year = 2009 AND T2.name = 'Spanish Grand Prix'"
+ },
+ {
+  "question_id": 967,
+  "db_id": "formula_1",
+  "question": "State code numbers of top 3 yougest drivers. How many Netherlandic drivers among them?",
+  "evidence": "youngest driver refers to Max (year(dob)); Netherlandic and Dutch refer to the same country",
+  "difficulty": "simple",
+  "gold_sql": "SELECT COUNT(*) FROM ( SELECT T1.nationality FROM drivers AS T1 ORDER BY JULIANDAY(T1.dob) DESC LIMIT 3) AS T3 WHERE T3.nationality = 'Dutch'"
+ },
+ {
+  "question_id": 971,
+  "db_id": "formula_1",
+  "question": "Please state the reference name of the oldest German driver.",
+  "evidence": "oldest refers to MIN(year(dob)); reference names appear in drverRef.",
+  "difficulty": "simple",
+  "gold_sql": "SELECT driverRef FROM drivers WHERE nationality = 'German' ORDER BY JULIANDAY(dob) ASC LIMIT 1"
+ },
+ {
+  "question_id": 977,
+  "db_id": "formula_1",
+  "question": "From race no. 50 to 100, how many finishers have been disqualified?",
+  "evidence": "disqualified refers to statusID = 2, finisher refers to time! = null; race no. refers to raceId; raceId > 50 and raceId < 100;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT SUM(IIF(time IS NOT NULL, 1, 0)) FROM results WHERE statusId = 2 AND raceID < 100 AND raceId > 50"
+ },
+ {
+  "question_id": 981,
+  "db_id": "formula_1",
+  "question": "On what year did the youngest driver had his first qualifying race? Also state the name, date and time of the race.",
+  "evidence": "date of birth refers to drivers.dob; The larger the birthday value, the younger the person is, and vice versa; first qualifying race refers to MIN(races.date);",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.year, T3.name, T3.date, T3.time FROM qualifying AS T1 INNER JOIN drivers AS T2 on T1.driverId = T2.driverId INNER JOIN races AS T3 on T1.raceId = T3.raceId WHERE T1.driverId = ( SELECT driverId FROM drivers ORDER BY dob DESC LIMIT 1 ) ORDER BY T3.date ASC LIMIT 1"
+ },
+ {
+  "question_id": 990,
+  "db_id": "formula_1",
+  "question": "What is the constructor reference name of the champion in the 2009 Singapore Grand Prix? Please give its website.",
+  "evidence": "the time of the champion shows in the format of \"minutes: seconds.millionsecond\" in which Max(time); constructor reference name refers to constructorRef; website refers to url",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT T3.constructorRef, T3.url FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN constructors AS T3 on T1.constructorId = T3.constructorId WHERE T2.name = 'Singapore Grand Prix' AND T2.year = 2009 AND T1.time LIKE '_:%:__.___'"
+ },
+ {
+  "question_id": 994,
+  "db_id": "formula_1",
+  "question": "Which constructor scored most points from Monaco Grand Prix between 1980 and 2010? List the score, name and nationality of this team.",
+  "evidence": "Monaco Grand Priz refers to the race; race in year between 1980 and 2010",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT SUM(T1.points), T2.name, T2.nationality FROM constructorResults AS T1 INNER JOIN constructors AS T2 ON T1.constructorId = T2.constructorId INNER JOIN races AS T3 ON T3.raceid = T1.raceid WHERE T3.name = 'Monaco Grand Prix' AND T3.year BETWEEN 1980 AND 2010 GROUP BY T2.name ORDER BY SUM(T1.points) DESC LIMIT 1"
+ },
+ {
+  "question_id": 1002,
+  "db_id": "formula_1",
+  "question": "As of the present, what is the full name of the youngest racer? Indicate her nationality and the name of the race to which he/she first joined.",
+  "evidence": "full name refers to forename+surname; Youngest racer = MAX(dob)",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T1.forename, T1.surname, T1.nationality, T3.name FROM drivers AS T1 INNER JOIN driverStandings AS T2 on T1.driverId = T2.driverId INNER JOIN races AS T3 on T2.raceId = T3.raceId ORDER BY JULIANDAY(T1.dob) DESC LIMIT 1"
+ },
+ {
+  "question_id": 1011,
+  "db_id": "formula_1",
+  "question": "Which top 20 driver created the shortest lap time ever record in a Formula_1 race? Please give them full names.",
+  "evidence": "shortest lap time refers to MIN(time); the time format for the shortest lap time is 'MM:SS.mmm' or 'M:SS.mmm'; full name of the driver refers to forename, surname",
+  "difficulty": "challenging",
+  "gold_sql": "WITH lap_times_in_seconds AS (SELECT driverId, (CASE WHEN SUBSTR(time, 1, INSTR(time, ':') - 1) <> '' THEN CAST(SUBSTR(time, 1, INSTR(time, ':') - 1) AS REAL) * 60 ELSE 0 END + CASE WHEN SUBSTR(time, INSTR(time, ':') + 1, INSTR(time, '.') - INSTR(time, ':') - 1) <> '' THEN CAST(SUBSTR(time, INSTR(time, ':') + 1, INSTR(time, '.') - INSTR(time, ':') - 1) AS REAL) ELSE 0 END + CASE WHEN SUBSTR(time, INSTR(time, '.') + 1) <> '' THEN CAST(SUBSTR(time, INSTR(time, '.') + 1) AS REAL) / 1000 ELSE 0 END) AS time_in_seconds FROM lapTimes) SELECT T2.forename, T2.surname, T1.driverId FROM (SELECT driverId, MIN(time_in_seconds) AS min_time_in_seconds FROM lap_times_in_seconds GROUP BY driverId) AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId ORDER BY T1.min_time_in_seconds ASC LIMIT 20"
+ },
+ {
+  "question_id": 1312,
+  "db_id": "student_club",
+  "question": "What's Angela Sanders's major?",
+  "evidence": "Angela Sanders is the full name; full name refers to first_name, last_name; major refers to major_name.",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.first_name = 'Angela' AND T1.last_name = 'Sanders'"
+ },
+ {
+  "question_id": 1317,
+  "db_id": "student_club",
+  "question": "Among the students from the Student_Club who attended the event \"Women's Soccer\", how many of them want a T-shirt that's in medium size?",
+  "evidence": "Women's Soccer is an event name; T-shirt that is in medium size refers to t_shirt_size = 'Medium'",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT COUNT(T1.event_id) FROM event AS T1 INNER JOIN attendance AS T2 ON T1.event_id = T2.link_to_event INNER JOIN member AS T3 ON T2.link_to_member = T3.member_id WHERE T1.event_name = 'Women''s Soccer' AND T3.t_shirt_size = 'Medium'"
+ },
+ {
+  "question_id": 1338,
+  "db_id": "student_club",
+  "question": "Was each expense in October Meeting on October 8, 2019 approved?",
+  "evidence": "event_name = 'October Meeting' where event_date = '2019-10-08'; approved = True means expenses was approved; approved = False means expenses was not approved",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.approved FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event INNER JOIN expense AS T3 ON T2.budget_id = T3.link_to_budget WHERE T1.event_name = 'October Meeting' AND T1.event_date LIKE '2019-10-08%'"
+ },
+ {
+  "question_id": 1340,
+  "db_id": "student_club",
+  "question": "Calculate the difference of the total amount spent in all events by the Student_Club in year 2019 and 2020.",
+  "evidence": "The first 4 strings of the event_date values in the event table can represent year; The difference of the total amount spent = SUBTRACT(spent where YEAR(event_date) = 2019, spent where YEAR(event_date) = 2020)",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT SUM(CASE WHEN SUBSTR(T1.event_date, 1, 4) = '2019' THEN T2.spent ELSE 0 END) - SUM(CASE WHEN SUBSTR(T1.event_date, 1, 4) = '2020' THEN T2.spent ELSE 0 END) AS num FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event"
+ },
+ {
+  "question_id": 1344,
+  "db_id": "student_club",
+  "question": "What was the notes of the fundraising on 2019/9/14?",
+  "evidence": "fundraising on 2019/9/14 refers to source = 'Fundraising' where date_received = '2019-09-14'",
+  "difficulty": "simple",
+  "gold_sql": "SELECT notes FROM income WHERE source = 'Fundraising' AND date_received = '2019-09-14'"
+ },
+ {
+  "question_id": 1357,
+  "db_id": "student_club",
+  "question": "State the date Connor Hilton paid his/her dues.",
+  "evidence": "Connor Hilton is the full name; full name refers to first_name, last_name; date the dues was paid refers to date_received where source = 'Dues';",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.date_received FROM member AS T1 INNER JOIN income AS T2 ON T1.member_id = T2.link_to_member WHERE T1.first_name = 'Connor' AND T1.last_name = 'Hilton' AND T2.source = 'Dues'"
+ },
+ {
+  "question_id": 1359,
+  "db_id": "student_club",
+  "question": "How many times was the budget in Advertisement for \"Yearly Kickoff\" meeting more than \"October Meeting\"?",
+  "evidence": "budget in Advertisement refer to category = 'Advertisement' in the budget table; DIVIDE(SUM(amount when event_name = 'Yearly Kickoff'), SUM(amount when event_name = 'October Meeting'))",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT CAST(SUM(CASE WHEN T2.event_name = 'Yearly Kickoff' THEN T1.amount ELSE 0 END) AS REAL) / SUM(CASE WHEN T2.event_name = 'October Meeting' THEN T1.amount ELSE 0 END) FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T1.category = 'Advertisement' AND T2.type = 'Meeting'"
+ },
+ {
+  "question_id": 1362,
+  "db_id": "student_club",
+  "question": "How many cities are there in Orange County, Virginia?",
+  "evidence": "Orange County is the county name, Virginia is the state name",
+  "difficulty": "simple",
+  "gold_sql": "SELECT COUNT(city) FROM zip_code WHERE county = 'Orange County' AND state = 'Virginia'"
+ },
+ {
+  "question_id": 1368,
+  "db_id": "student_club",
+  "question": "What does the person with the phone number \"809-555-3360\" major in?",
+  "evidence": "major in refers to major_name",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.phone = '809-555-3360'"
+ },
+ {
+  "question_id": 1376,
+  "db_id": "student_club",
+  "question": "Among all the closed events, which event has the highest spend-to-budget ratio?",
+  "evidence": "closed events refers to event_name where status = 'Closed'; highest spend-to budget ratio refers to MAX(DIVIDE(spent, amount))",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.event_name FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T2.status = 'Closed' ORDER BY T1.spent / T1.amount DESC LIMIT 1"
+ },
+ {
+  "question_id": 1378,
+  "db_id": "student_club",
+  "question": "What is the highest amount of budget spend for an event?",
+  "evidence": "highest amount of budget spend refers to MAX(spent)",
+  "difficulty": "simple",
+  "gold_sql": "SELECT MAX(spent) FROM budget"
+ },
+ {
+  "question_id": 1389,
+  "db_id": "student_club",
+  "question": "Which event has the lowest cost?",
+  "evidence": "event refers to event_name; lowest cost means MIN(cost)",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.event_name FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event INNER JOIN expense AS T3 ON T2.budget_id = T3.link_to_budget ORDER BY T3.cost LIMIT 1"
+ },
+ {
+  "question_id": 1392,
+  "db_id": "student_club",
+  "question": "Indicate the top source of funds received in September 2019 based on their amount.",
+  "evidence": "top source funds refers to MAX(source); September 2019 means date_received BETWEEN '2019-09-01' and '2019-09-30'",
+  "difficulty": "simple",
+  "gold_sql": "SELECT source FROM income WHERE date_received BETWEEN '2019-09-01' and '2019-09-30' ORDER BY source DESC LIMIT 1"
+ },
+ {
+  "question_id": 1399,
+  "db_id": "student_club",
+  "question": "Did Maya Mclean attend the 'Women's Soccer' event?",
+  "evidence": "Maya Mclean is the full name; full name refers to first_name, last_name; 'Women's Soccer' is an event_name",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT CASE WHEN T3.event_name = 'Women''s Soccer' THEN 'YES' END AS result FROM member AS T1 INNER JOIN attendance AS T2 ON T1.member_id = T2.link_to_member INNER JOIN event AS T3 ON T2.link_to_event = T3.event_id WHERE T1.first_name = 'Maya' AND T1.last_name = 'Mclean'"
+ },
+ {
+  "question_id": 1401,
+  "db_id": "student_club",
+  "question": "Indicate the cost of posters for 'September Speaker' event.",
+  "evidence": "'Posters' is the expense description; 'September Speaker' is an event name",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T3.cost FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event INNER JOIN expense AS T3 ON T2.budget_id = T3.link_to_budget WHERE T1.event_name = 'September Speaker' AND T3.expense_description = 'Posters'"
+ },
+ {
+  "question_id": 1403,
+  "db_id": "student_club",
+  "question": "Indicate the name of the closed event whose cost has exceeded the budget the most.",
+  "evidence": "closed events refers to event_name where status = 'Closed'; exceed the budget the most refers to MIN(remaining) where remaining < 0",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.event_name FROM budget AS T1 INNER JOIN event AS T2 ON T2.event_id = T1.link_to_event WHERE T1.event_status = 'Closed' AND T1.remaining < 0 ORDER BY T1.remaining LIMIT 1"
+ },
+ {
+  "question_id": 1405,
+  "db_id": "student_club",
+  "question": "Calculate the amount budgeted for 'April Speaker' event. List all the budgeted categories for said event in an ascending order based on their amount budgeted.",
+  "evidence": "'April Speaker' is an event name; amount budgeted refers to SUM(amount); budget categories refers to category",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT T2.category, SUM(T2.amount) FROM event AS T1 JOIN budget AS T2 ON T1.event_id = T2.link_to_event WHERE T1.event_name = 'April Speaker' GROUP BY T2.category ORDER BY SUM(T2.amount) ASC"
+ },
+ {
+  "question_id": 1410,
+  "db_id": "student_club",
+  "question": "List out the full name and total cost that member id \"rec4BLdZHS2Blfp4v\" incurred?",
+  "evidence": "full name refers to first_name, last name",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T1.first_name, T1.last_name, SUM(T2.cost) FROM member AS T1 INNER JOIN expense AS T2 ON T1.member_id = T2.link_to_member WHERE T1.member_id = 'rec4BLdZHS2Blfp4v'"
+ },
+ {
+  "question_id": 1411,
+  "db_id": "student_club",
+  "question": "State what kind of expenses that Sacha Harrison incurred?",
+  "evidence": "kind of expenses refers to expense_description; Sacha Harrison is the full name; full name refers to first_name, last_name;",
+  "difficulty": "simple",
+  "gold_sql": "SELECT T2.expense_description FROM member AS T1 INNER JOIN expense AS T2 ON T1.member_id = T2.link_to_member WHERE T1.first_name = 'Sacha' AND T1.last_name = 'Harrison'"
+ },
+ {
+  "question_id": 1422,
+  "db_id": "student_club",
+  "question": "State the category of events were held at MU 215.",
+  "evidence": "'MU 215' is the location of event; ",
+  "difficulty": "simple",
+  "gold_sql": "SELECT DISTINCT T2.category FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event WHERE T1.location = 'MU 215'"
+ },
+ {
+  "question_id": 1427,
+  "db_id": "student_club",
+  "question": "What are the budget category of the events located at MU 215 and a guest speaker type with a 0 budget spent?",
+  "evidence": "budget category refers to category; events located at refers to location; type = 'Guest Speaker'; 0 budget spent refers to spent = 0; ",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT DISTINCT T2.category, T1.type FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event WHERE T1.location = 'MU 215' AND T2.spent = 0 AND T1.type = 'Guest Speaker'"
+ },
+ {
+  "question_id": 1432,
+  "db_id": "student_club",
+  "question": "Among the members with t-shirt size of medium, what is the percentage of the amount 50 received by the Student_Club?",
+  "evidence": "t_shirt_size = 'Medium' where position = 'Member'; percentage = DIVIDE(COUNT(amount = 50), COUNT(member_id)) * 100",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT CAST(SUM(CASE WHEN T2.amount = 50 THEN 1.0 ELSE 0 END) AS REAL) * 100 / COUNT(T2.income_id) FROM member AS T1 INNER JOIN income AS T2 ON T1.member_id = T2.link_to_member WHERE T1.position = 'Member' AND T1.t_shirt_size = 'Medium'"
+ },
+ {
+  "question_id": 1435,
+  "db_id": "student_club",
+  "question": "List the names of closed event as \"game\" that was closed from 3/15/2019 to 3/20/2020.",
+  "evidence": "name of events refers event_name; game event that was closed refers to type = 'Game' where status = 'Closed'; event_date BETWEEN '2019-03-15' and '2020-03-20'; ",
+  "difficulty": "moderate",
+  "gold_sql": "SELECT DISTINCT event_name FROM event WHERE type = 'Game' AND date(SUBSTR(event_date, 1, 10)) BETWEEN '2019-03-15' AND '2020-03-20' AND status = 'Closed'"
+ },
+ {
+  "question_id": 1457,
+  "db_id": "student_club",
+  "question": "Give the full name and contact number of members who had to spend more than average on each expense.",
+  "evidence": "full name refers to first_name, last_name; contact number refers to phone; had spent more than average on each expense refers to cost > AVG(cost)",
+  "difficulty": "challenging",
+  "gold_sql": "SELECT DISTINCT T3.first_name, T3.last_name, T3.phone FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member WHERE T1.cost > ( SELECT AVG(T1.cost) FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member )"
+ }
+]

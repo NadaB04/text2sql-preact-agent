@@ -1,0 +1,67 @@
+{
+ "preact_q8": {
+  "correct": 17,
+  "n": 20,
+  "accuracy": 0.85,
+  "status": {
+   "ok": 20
+  },
+  "steps": 5.5,
+  "prompt_tokens": 32918,
+  "completion_tokens": 1005,
+  "median_wall_s": 30.0,
+  "llm_s": 698.8,
+  "mechanism": "tool calls with a thought 118/118; turns with >1 tool call 7; rejected for missing fields 0; turns with free text next to the call (dropped from history) 52/110; queries with a prediction 67/67; repeat-guard hits 1",
+  "correct_ids": [
+   5,
+   32,
+   45,
+   47,
+   737,
+   740,
+   747,
+   779,
+   798,
+   850,
+   901,
+   912,
+   933,
+   1323,
+   1351,
+   1375,
+   1394
+  ]
+ },
+ "preact_q4km": {
+  "correct": 15,
+  "n": 20,
+  "accuracy": 0.75,
+  "status": {
+   "ok": 19,
+   "max_steps": 1
+  },
+  "steps": 6.45,
+  "prompt_tokens": 45071,
+  "completion_tokens": 1189,
+  "median_wall_s": 23.0,
+  "llm_s": 639.0,
+  "mechanism": "tool calls with a thought 146/146; turns with >1 tool call 15; rejected for missing fields 0; turns with free text next to the call (dropped from history) 72/129; queries with a prediction 92/92; repeat-guard hits 1",
+  "correct_ids": [
+   5,
+   45,
+   46,
+   47,
+   737,
+   740,
+   747,
+   779,
+   850,
+   901,
+   912,
+   933,
+   1351,
+   1375,
+   1394
+  ]
+ }
+}
