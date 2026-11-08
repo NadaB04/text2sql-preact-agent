@@ -50,7 +50,7 @@ question and skips scoring. Switching to vLLM changes only `--base-url` and `--m
 | `--telemetry` | off | sample CPU, RAM, GPU and the server's `/metrics` every second (Bonus 2) |
 | `--no-answer` | off | skip the plain-English answer |
 | `--think` | off | the model's built-in reasoning (slower) |
-| `--ids`, `--limit` | | run a subset |
+| `--ids`, `--limit` | | run a subset (scored against just those questions) |
 
 Tests need no model or GPU (a scripted fake model stands in for the server): `python -m pytest -q`
 (17 tests). They look for the kit next to this folder, or in `KIT_DIR`, and skip without it.

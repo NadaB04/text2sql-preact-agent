@@ -156,7 +156,11 @@ def main(argv=None) -> int:
     print(f"wrote {out} ({len(results)} questions)")
 
     if questions and all("gold_sql" in q for q in questions):  # skip scoring when gold_sql is missing
-        print(score(a.questions, a.db_dir, out, logs / "score_report.json"))
+        scored = a.questions
+        if a.ids or a.limit:  # a subset: score it against the questions that were run, not the whole file
+            scored = str(logs / "questions_run.json")
+            Path(scored).write_text(json.dumps(questions, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(score(scored, a.db_dir, out, logs / "score_report.json"))
     return 0
 
 
