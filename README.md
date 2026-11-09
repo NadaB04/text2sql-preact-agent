@@ -323,6 +323,45 @@ per-question logs, so `scripts/plot_timeline.py` puts all of them on one time ax
 
 ## What didn't work
 
+- **Other agent designs.** PreAct was chosen from six designs built on the same model, tools and prompt
+  rules. Four are workflows, where code or one model decision fixes the path: **single** (one call writes
+  the SQL, code runs it), **chain** (analyse the question, check the names in code, write, check that the
+  SQL runs, repair if not), **route** (the model classifies the question once: simple goes to the chain,
+  complex to the agent) and **evaluator** (one call writes the SQL, a second call judges it and asks for
+  revisions). Two are agents, where the model decides each next step: **plan-and-execute** (write a plan,
+  run its steps with tools, replan) and **PreAct**. On the 20 dev questions:
+
+  | Design | single | chain | route | evaluator | PreAct | plan-and-execute |
+  |---|---|---|---|---|---|---|
+  | Correct (20 dev) | 11 | 14 | 16 | **18** | 16 | 14 |
+  | Model calls / question | 1 | 2.4 | 4.6 | 3.7 | 6.6 | 6.8 |
+
+  With 20 questions almost none of these gaps is significant (the same design moved by one or two
+  questions between identical runs), and the agents spent six to seven calls per question without being
+  more accurate than the evaluator. The top three then ran on the 100 held-out questions: PreAct 64,
+  route 61, evaluator 60, a tie. The difference was behaviour: PreAct looked at real values in the
+  database on 47 of the 100 questions, route on 19 and the evaluator on none, which is the grounding the
+  BIRD paper says models lack. I kept PreAct because the assignment asks for a tool-using agent and its
+  reasoning is visible and checkable in every log; the evaluator was better at avoiding extra columns.
+  The comparison code and its logs are kept outside this repo.
+- **Decoding settings.** The final runs are greedy (temperature 0): a question has one right SQL, so the
+  most likely token is what we want, and top-p / top-k only matter once you sample. In version 1 (20 dev
+  questions, older prompt) sampling at temperature 0.7 gave the same accuracy as greedy (85%), and
+  Qwen's thinking mode 90% with about 60% more output tokens: within noise, at a cost the 300 s limit
+  cannot carry on a laptop (~7 tok/s). Beam search is not offered by Ollama's OpenAI endpoint, and in an
+  agent each step is short and conditioned on tool results, so searching over alternatives pays off at
+  the level of whole queries, not tokens.
+- **A richer tokenizer.** I looked at adding SQL keywords and schema names as tokens. Two reasons
+  stopped it: (1) BIRD's error analysis (Li et al., 2023) puts the failures in schema linking (41.6%),
+  database content (40.8%) and evidence (17.6%), not in writing SQL, and my misses agree (an extra
+  column, a wrong column, `LIKE` instead of `=`); (2) new tokens need new embedding and output rows,
+  i.e. training the model. What needs no training was done instead: a compact schema text and cell
+  values cut at 80 characters, so prompts cost fewer tokens.
+- **Fine-tuning (PEFT / LoRA).** I considered a LoRA adapter trained on BIRD's train split. The model is
+  served as a quantized GGUF, while the adapter would be trained on the full-precision weights (or in
+  QLoRA's own 4-bit format) and then merged and re-quantized or converted, a pipeline with its own
+  quality risk and GPU time I did not have before the deadline. The error analysis above also says the
+  gap is knowing the schema and the data, which the agent's tools address at run time.
 - **Asking for reasoning in the prompt** (version 1): "Thought:" lines appeared in about 12% of model
   calls. Making `thought` a required tool argument fixed it and using pyDantic (100% in every run since).
 - **Few-shot example trajectories** (version 1): the demos taught the model to explore less, and held-out
