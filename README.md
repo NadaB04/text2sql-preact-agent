@@ -52,9 +52,6 @@ question and skips scoring. Switching to vLLM changes only `--base-url` and `--m
 | `--think` | off | the model's built-in reasoning (slower) |
 | `--ids`, `--limit` | | run a subset (scored against just those questions) |
 
-Tests need no model or GPU (a scripted fake model stands in for the server): `python -m pytest -q`
-(18 tests). They look for the kit next to this folder, or in `KIT_DIR`, and skip without it.
-
 ## How the agent works
 
 One question = one full turn, all inside the 300-second limit (`runner.answer_question`):
@@ -121,8 +118,8 @@ the call is retried once after 3 s.
 - **Read-only in code**, three ways (`db.py`): the file is opened with `mode=ro`, `PRAGMA query_only=ON`,
   and an SQLite authorizer denies anything that is not a read (tested with DELETE, DROP, ATTACH, PRAGMA).
   Every query also has a time budget.
-- **`gold_sql` never reaches the agent**: the runner passes only the question and evidence (a test
-  checks every message the model receives).
+- **`gold_sql` never reaches the agent**: the runner passes only the question and evidence (checked
+  on every message the model receives).
 - **300 s per question** for the whole turn: each model call gets at most the time left; with less
   than 5 s left the question stops with `timeout`. **Step limit 20** model calls: `max_steps`. Either way
   the last query that ran is kept as the best-effort answer (`fallback_sql: true` in the result).
@@ -350,7 +347,7 @@ per-question logs, so `scripts/plot_timeline.py` puts all of them on one time ax
 
 ## AI tools used
 
-Claude Code (Claude Opus) wrote this version with me: the code, the tests, the Kaggle notebooks and
+Claude Code (Claude Opus) wrote this version with me: the code, the Kaggle notebooks and
 the log analysis; I decided the design, read the traces, and chose what to change.
 Mistakes it made and fixed are listed under [What didn't work](#what-didnt-work).
 
@@ -366,7 +363,6 @@ text2sql_v2/         the agent (read in this order: runner, agent, tools, prompt
   db.py              read-only SQLite, schema text, "did you mean"
   telemetry.py       hardware + vLLM metrics sampler (Bonus 2)
   scoring.py         unmodified copy of the kit's scorer
-tests/               test_agent.py (no model needed)
 scripts/             bench_native.py + quant_report.py (quantization), plot_timeline.py (Bonus 2)
 kaggle/              the notebooks behind the final Ollama and vLLM runs (each embeds the code)
 runs/                logs of every run quoted here (final_ollama, final_vllm, heldout100)
