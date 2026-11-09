@@ -363,9 +363,10 @@ per-question logs, so `scripts/plot_timeline.py` puts all of them on one time ax
   quality risk and GPU time I did not have before the deadline. The error analysis above also says the
   gap is knowing the schema and the data, which the agent's tools address at run time.
 - **Asking for reasoning in the prompt** (version 1): "Thought:" lines appeared in about 12% of model
-  calls. Making `thought` a required tool argument fixed it and using pyDantic (100% in every run since).
+  calls. Making `thought` a required tool argument, enforced by a pydantic schema, fixed it (100% in every
+  run since).
 - **Few-shot example trajectories** (version 1): the demos taught the model to explore less, and held-out
-  accuracy fell from 109 to 90 of 176 (p = 0.002). This version uses none. The article
+  accuracy fell from 109 to 90 of 176 (p = 0.002). This version uses none.
 - **An empty `sql` argument** (5 of 100 held-out questions): the call arrived with a thought and a
   prediction but no SQL, most likely lost by Ollama's parser for Qwen's XML-style tool calls. In one
   question the model repeated the same broken call 18 times until the step limit. Next fix: after two
@@ -381,6 +382,20 @@ per-question logs, so `scripts/plot_timeline.py` puts all of them on one time ax
 Fable 5.1 was used to define the Opus agent which wrote this version with me: the code, the Kaggle notebooks and
 the log analysis; I decided the design, read the traces, and chose what to change. Later Fable 5.1 was used to
 review and analyze the work of Opus.
+
+**What the AI assistant got wrong** (caught by tests, logs or review, and fixed):
+- Its first SQLite authorizer allowed `PRAGMA query_only`, so the agent could have switched the second
+  read-only layer off (the `mode=ro` layer still held). Caught by a unit test.
+- The per-call HTTP timeout used the full remaining time, so a question could end at 302 s instead of
+  under 300 s. Fixed with a margin.
+- Its model-call timing dropped calls that raised (HTTP timeout), so `llm_time_s` undercounted exactly the
+  questions where the time went. Fixed by booking the elapsed time before re-raising.
+- The telemetry sampler named its stop flag `_stop`, shadowing `threading.Thread._stop`, so the run
+  crashed at `join()` after writing all results. Renamed.
+- It first blamed the 8-agent slowdown on a full KV cache; the telemetry showed the KV cache well below
+  full and no preemptions, so the explanation was revised (prefill contention and the tail).
+- For few-shot demos it predicted a small gain and first blamed the loss on copied text-form tool calls;
+  the logs showed none, and the real cause was fewer value checks.
 
 ## Repository map
 
