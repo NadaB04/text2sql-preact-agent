@@ -53,7 +53,7 @@ question and skips scoring. Switching to vLLM changes only `--base-url` and `--m
 | `--ids`, `--limit` | | run a subset (scored against just those questions) |
 
 Tests need no model or GPU (a scripted fake model stands in for the server): `python -m pytest -q`
-(17 tests). They look for the kit next to this folder, or in `KIT_DIR`, and skip without it.
+(18 tests). They look for the kit next to this folder, or in `KIT_DIR`, and skip without it.
 
 ## How the agent works
 

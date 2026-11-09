@@ -238,6 +238,20 @@ def test_did_you_mean_names_the_table():
     assert "publisher.publisher_name" in db.error_hint(str(exc.value))
 
 
+def test_schema_of_a_huge_database_stays_within_the_budget(tmp_path):
+    import sqlite3
+    path = tmp_path / "huge.sqlite"
+    con = sqlite3.connect(path)
+    for t in range(300):
+        con.execute(f"CREATE TABLE table_{t} (" + ", ".join(f"column_number_{c} TEXT" for c in range(40)) + ")")
+    con.commit()
+    con.close()
+    db = Database(path)
+    text = db.schema()
+    assert len(text) <= 24_000 and "table_299" in text and "describe_table" in text
+    assert "column_number_0" in db.describe("table_299")
+
+
 # ---------------------------------------------------------------- telemetry (Bonus 2)
 def test_telemetry_parses_vllm_metrics_and_samples(tmp_path):
     text = ('# HELP x\nvllm:num_requests_running{model_name="m"} 3.0\n'

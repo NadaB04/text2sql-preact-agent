@@ -152,8 +152,12 @@ class Database:
         full = "\n\n".join(self.describe(t) for t in self.tables())
         if len(full) <= budget_chars:
             return full
-        return "\n".join(f"TABLE {quote(t)}: " + ", ".join(quote(c) for c in self.column_names(t))
-                         for t in self.tables()) + "\n(Large database: use describe_table for details.)"
+        names = "\n".join(f"TABLE {quote(t)}: " + ", ".join(quote(c) for c in self.column_names(t))
+                          for t in self.tables()) + "\n(Large database: use describe_table for details.)"
+        if len(names) <= budget_chars:
+            return names
+        return ("TABLES: " + ", ".join(quote(t) for t in self.tables())
+                + "\n(Very large database: use describe_table to see a table's columns.)")
 
     def docs(self) -> dict[str, dict[str, str]]:
         """{table: {column: 'meaning; values: ...'}} from database_description/*.csv (may be empty)."""
