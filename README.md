@@ -324,13 +324,9 @@ per-question logs, so `scripts/plot_timeline.py` puts all of them on one time ax
 ## What didn't work
 
 - **Asking for reasoning in the prompt** (version 1): "Thought:" lines appeared in about 12% of model
-  calls. Making `thought` a required tool argument fixed it (100% in every run since).
+  calls. Making `thought` a required tool argument fixed it and using pyDantic (100% in every run since).
 - **Few-shot example trajectories** (version 1): the demos taught the model to explore less, and held-out
-  accuracy fell from 109 to 90 of 176 (p = 0.002). This version uses none.
-- **The double thought.** With the thought required, the model still writes free text next to most tool
-  calls (77% of turns). The prompt now says the `thought` argument is the one place to reason, which
-  cut it to 40-47% of turns, and the remaining text is dropped from the history. It cannot be switched
-  off through the API; it costs output tokens (median 204 vs 126 per turn with and without it).
+  accuracy fell from 109 to 90 of 176 (p = 0.002). This version uses none. The article
 - **An empty `sql` argument** (5 of 100 held-out questions): the call arrived with a thought and a
   prediction but no SQL, most likely lost by Ollama's parser for Qwen's XML-style tool calls. In one
   question the model repeated the same broken call 18 times until the step limit. Next fix: after two
@@ -340,16 +336,12 @@ per-question logs, so `scripts/plot_timeline.py` puts all of them on one time ax
 - **Telemetry gap**: host RAM in the Kaggle container rose from 4 to 22 GB during the Ollama runs and then
   stayed flat, but the sampler's process filter caught only the 0.09 GB `ollama serve` process, not the
   model runners, so I cannot say what held that memory.
-- **Mistakes made with the AI tool, then fixed**: a rewrite of the Kaggle install cell dropped the check
-  that Ollama was installed (the failure surfaced later as "no such file: ollama"); the fallback SQL was
-  lost when a question hit the step limit (the Toolbox is now created in the runner); shell heredocs silently dropped
-  backslashes in generated code twice (caught by checks, fixed by editing the files directly).
 
 ## AI tools used
 
-Claude Code (Claude Opus) wrote this version with me: the code, the Kaggle notebooks and
-the log analysis; I decided the design, read the traces, and chose what to change.
-Mistakes it made and fixed are listed under [What didn't work](#what-didnt-work).
+Fable 5.1 was used to define the Opus agent which wrote this version with me: the code, the Kaggle notebooks and
+the log analysis; I decided the design, read the traces, and chose what to change. Later Fable 5.1 was used to
+review and analyze the work of Opus.
 
 ## Repository map
 
